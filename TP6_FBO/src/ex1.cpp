@@ -1,23 +1,21 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-
 #include <iostream>
 #include <vector>
 #include <cmath>
 #include "MyMatrixFunction.h"
 #include "MyCamera.h"
-
-
 #include "common/GLShader.h"
+
 #define TINYOBJ_LOADER_C_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
+// Variables globales pour la caméra
 float cameraDistance = 5.0f;
 float cameraAzimuth = 0.0f;
 float cameraElevation = 0.0f;
-
 float lastX = 320, lastY = 240; 
 bool firstMouse = true;
 
@@ -40,7 +38,6 @@ void loadObj(const char* filename, Mesh* mesh) {
         exit(1);
     }
 
-    // Calculate the total number of vertices
     size_t totalVertices = 0;
     for (const auto& shape : shapes) {
         totalVertices += shape.mesh.indices.size();
@@ -115,13 +112,11 @@ static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) 
 
 struct Application {
     GLShader m_basicProgram;
-
     uint32_t m_VAO;
     uint32_t m_VBO;
     GLuint texture1ID;
     Mesh mesh;
     MyCamera camera = MyCamera();
-    
 
     void Initialize() {
         m_basicProgram.LoadVertexShader("shader/ex3.vs.glsl");
@@ -171,7 +166,6 @@ struct Application {
         glGenerateMipmap(GL_TEXTURE_2D);
 
         glEnable(GL_CULL_FACE);
-
         glBindVertexArray(0);
     }
 
@@ -182,10 +176,9 @@ struct Application {
         free(mesh.vertices);
     }
 
-void Render() {
+    void Render() {
     glClearColor(0.1f, 0.1f, 0.1f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     glEnable(GL_DEPTH_TEST);
 
     uint32_t program = m_basicProgram.GetProgram();
@@ -204,18 +197,14 @@ void Render() {
     int projectionLoc = glGetUniformLocation(program, "projection");
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, projection);
 
+    //camera.calculateCameraTarget(cameraDistance, cameraAzimuth, cameraElevation);
     camera.calculateCameraPosition(cameraDistance, cameraAzimuth, cameraElevation);
     float view[16];
-    lookAt(
-        view, 
-        camera.getCameraPosition(), 
-        camera.getCameraTarget(), 
-        camera.getCameraUp());
+    lookAt(view, camera.getCameraPosition(), camera.getCameraTarget(), camera.getCameraUp());
     int viewLoc = glGetUniformLocation(program, "view");
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, view);
 
     vec3 translation = {0.0f, 0.0f, 0.0f};
-    //vec3 rotation = {(float)glfwGetTime(), (float)glfwGetTime(), 0.0f};
     vec3 rotation = {0.0f, 0.0f, 0.0f};
     vec3 scale = {1.0f, 1.0f, 1.0f};
     float model[16];
@@ -249,7 +238,6 @@ void Render() {
 
     glUseProgram(0);
 }
-
 };
 
 int main(void) {
@@ -268,17 +256,15 @@ int main(void) {
     }
 
     glfwMakeContextCurrent(window);
-    //glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    
     GLenum error = glewInit();
     if (error != GLEW_OK) {
         std::cerr << "Failed to initialize GLEW: " << glewGetErrorString(error) << std::endl;
         return -1;
     }
-
 
     Application app;
     app.Initialize();
