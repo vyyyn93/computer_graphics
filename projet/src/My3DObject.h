@@ -20,6 +20,7 @@ private:
     vec3 scale;
     vec3 objectColor;
     GLuint textureID;
+    GLShader program;
 
 public:
     My3DObject(
@@ -28,11 +29,13 @@ public:
         vec3 rotation, 
         vec3 scale, 
         vec3 objectColor,
-        const char* texturePath
-
+        const char* texturePath,
+        const char* vertex_shader_path,
+        const char* frag_shader_path
     ) : translation(translation), rotation(rotation), scale(scale), objectColor(objectColor) {
         loadObj(filename, &mesh);
-        loadMipmapTexture(texturePath);
+        loadMipMapTexture(texturePath);
+        loadProgram(vertex_shader_path, frag_shader_path );
     }
 
     ~My3DObject() {
@@ -40,9 +43,18 @@ public:
             free(mesh.vertices);
             mesh.vertices = nullptr;
         }
+        glDeleteTextures(1, &textureID);
+        program.Destroy();
+
     }
 
-    void loadMipmapTexture(const char* texturePath) {
+    void loadProgram(const char* vertex_shader_path, const char* frag_shader_path){
+        program.LoadVertexShader(vertex_shader_path);
+        program.LoadFragmentShader(frag_shader_path);
+        program.Create();
+    }
+
+    void loadMipMapTexture(const char* texturePath) {
         glGenTextures(1, &textureID);
         glBindTexture(GL_TEXTURE_2D, textureID);
 
@@ -142,6 +154,10 @@ public:
 
     GLuint getTexture() const {
         return textureID;
+    }
+
+    GLShader getProgram() const{
+        return program;
     }
 };
 
