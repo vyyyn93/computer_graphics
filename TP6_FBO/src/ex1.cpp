@@ -122,20 +122,20 @@ struct Application {
         m_basicProgram.LoadVertexShader("shader/ex3.vs.glsl");
         m_basicProgram.LoadFragmentShader("shader/ex3.fs.glsl");
         m_basicProgram.Create();
+        GLuint program = m_basicProgram.GetProgram()
 
         loadObj("obj/human.obj", &mesh);
 
         glGenVertexArrays(1, &m_VAO);
         glGenBuffers(1, &m_VBO);
-
         glBindVertexArray(m_VAO);
 
         glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
         glBufferData(GL_ARRAY_BUFFER, mesh.vertexCount * sizeof(Vertex), mesh.vertices, GL_STATIC_DRAW);
 
-        int positionLocation = glGetAttribLocation(m_basicProgram.GetProgram(), "a_position");
-        int normalLocation = glGetAttribLocation(m_basicProgram.GetProgram(), "a_normal");
-        int texcoordsLocation = glGetAttribLocation(m_basicProgram.GetProgram(), "a_texcoords");
+        int positionLocation = glGetAttribLocation(program, "a_position");
+        int normalLocation = glGetAttribLocation(program, "a_normal");
+        int texcoordsLocation = glGetAttribLocation(program, "a_texcoords");
 
         if (positionLocation == -1 || normalLocation == -1 || texcoordsLocation == -1) {
             std::cerr << "Could not find attributes in the shader" << std::endl;
@@ -187,7 +187,7 @@ struct Application {
     }
     glUseProgram(program);
 
-    // Lier les textures aux unités de texture 0 et 1
+    // Lier les textures aux unités de texture 0 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture1ID);
     glUniform1i(glGetUniformLocation(program, "u_texture1"), 0);
