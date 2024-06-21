@@ -53,7 +53,15 @@ void main() {
     vec3 color1 = texture(u_texture1, TexCoords).rgb;
     
     // Calcul de la couleur finale
-    vec3 finalColor = (ambient + diffuse + specular) * color1;
+    vec3 finalColor = ((ambient*0.5) + diffuse + specular) * color1;
+
+    // Ajout de l'effet atmosphérique
+    float distance = length(FragPos - viewPos);
+    float atmosphereFactor = clamp(exp(-distance * 0.02), 0.0, 1.0);
+    vec3 atmosphereColor = vec3(0.6, 0.7, 1.0) * atmosphereFactor;
+
+    // Combiner la couleur finale avec l'effet atmosphérique
+    finalColor = mix(finalColor, atmosphereColor, 0.2);
 
     // Sortie de la couleur 
     color = vec4(finalColor, 1.0);

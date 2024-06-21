@@ -20,7 +20,10 @@ private:
     vec3 scale;
     vec3 objectColor;
     GLuint textureID;
+    float texture_scale;
     GLShader program;
+    uint32_t VAO;
+    uint32_t VBO;
 
 public:
     My3DObject(
@@ -29,12 +32,10 @@ public:
         vec3 rotation, 
         vec3 scale, 
         vec3 objectColor,
-        const char* texturePath,
         const char* vertex_shader_path,
         const char* frag_shader_path
     ) : translation(translation), rotation(rotation), scale(scale), objectColor(objectColor) {
         loadObj(filename, &mesh);
-        loadMipMapTexture(texturePath);
         loadProgram(vertex_shader_path, frag_shader_path );
     }
 
@@ -45,6 +46,8 @@ public:
         }
         glDeleteTextures(1, &textureID);
         program.Destroy();
+        glDeleteVertexArrays(1, &VAO);
+        glDeleteBuffers(1, &VBO);
 
     }
 
@@ -54,7 +57,8 @@ public:
         program.Create();
     }
 
-    void loadMipMapTexture(const char* texturePath) {
+    void loadMipMapTexture(const char* texturePath, float texture_scale=1.0f) {
+        this->texture_scale = texture_scale;
         glGenTextures(1, &textureID);
         glBindTexture(GL_TEXTURE_2D, textureID);
 
@@ -70,6 +74,28 @@ public:
         } else {
             std::cerr << "Failed to load texture: " << texturePath << std::endl;
         }
+    }
+
+    void loadTexture(uint8_t color[4]){
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        int width, height;
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, color);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    
+    void loadComplexeTexture(uint8_t color[]){
+        glGenTextures(1, &textureID);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        int width, height;
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, color);
+        glGenerateMipmap(GL_TEXTURE_2D);
     }
 
     void loadObj(const char* filename, Mesh* mesh) {
@@ -132,8 +158,51 @@ public:
         }
     }
 
+    void InitializeObject() {
+
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
+        glBindVertexArray(VAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(
+            GL_ARRAY_BUFFER,
+            mesh.vertexCount * sizeof(Vertex),
+            mesh.vertices,
+            GL_STATIC_DRAW
+        );
+
+        GLuint programID = program.GetProgram();
+        int positionLocation = glGetAttribLocation(programID, "a_position");
+        int normalLocation = glGetAttribLocation(programID, "a_normal");
+        int texcoordsLocation = glGetAttribLocation(programID, "a_texcoords");
+
+        if (positionLocation == -1 || normalLocation == -1 || texcoordsLocation == -1) {
+            std::cerr << "Could not find attributes in the shader" << std::endl;
+        }
+
+        glEnableVertexAttribArray(positionLocation);
+        glVertexAttribPointer(positionLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, position));
+
+        glEnableVertexAttribArray(normalLocation);
+        glVertexAttribPointer(normalLocation, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));
+
+        glEnableVertexAttribArray(texcoordsLocation);
+        glVertexAttribPointer(texcoordsLocation, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, texcoords));
+
+        glBindVertexArray(0);
+    }
+
     vec3 getTranslation() const {
         return translation;
+    }
+
+    void setTranslation(vec3 new_translation) {
+        this->translation = new_translation;
+    }
+    
+    void setRotation(vec3 new_rotation) {
+        this->rotation = new_rotation;
     }
 
     vec3 getRotation() const {
@@ -158,6 +227,18 @@ public:
 
     GLShader getProgram() const{
         return program;
+    }
+
+    uint32_t getVAO() const {
+        return VAO;
+    }
+    
+    uint32_t getVBO() const {
+        return VBO;
+    }
+
+    float getTextureScale() const {
+        return texture_scale;
     }
 };
 

@@ -88,4 +88,15 @@ void createWorldMatrix(float* matrix, vec3 translation, vec3 rotation, vec3 scal
     matrix[15] = 1.0f;
 }
 
+float calculateDistance(const vec3& a, const vec3& b) {
+    return std::sqrt((a.x - b.x) * (a.x - b.x) + 
+                     (a.y - b.y) * (a.y - b.y) + 
+                     (a.z - b.z) * (a.z - b.z));
+}
+
+float calculateCurrentAngle(const vec3& position) {
+    // Utiliser atan2 pour obtenir l'angle en radians
+    return std::atan2(position.z, position.x);
+}
+
 #endif

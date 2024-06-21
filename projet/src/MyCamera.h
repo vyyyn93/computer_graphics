@@ -54,6 +54,7 @@ class MyCamera
     void changeMode(){
       this->pivot_mode = ~this->pivot_mode;
     }
+    
 };
 
 #endif
